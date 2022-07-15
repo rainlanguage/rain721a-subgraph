@@ -1,0 +1,10 @@
+node_modules
+build
+generated
+contracts
+cache
+artifacts
+docker
+typechain
+package-lock.json
+.env

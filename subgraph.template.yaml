@@ -1,0 +1,55 @@
+specVersion: 0.0.4
+features:
+  - ipfsOnEthereumContracts
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: Rain721AFactory
+    network: {{ network }}
+    source:
+      address: "{{ rain721aFactory }}"
+      startBlock: {{ rain721aFactoryBlock }}
+      abi: Rain721AFactory
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      entities:
+        - Implementation
+        - NewChild
+      abis:
+        - name: Rain721AFactory
+          file: ./abis/Rain721AFactory.json
+      eventHandlers:
+        - event: NewChild(address,address)
+          handler: handleNewChild
+      file: ./src/rain721aFactory.ts
+templates:
+  - kind: ethereum
+    name: Rain721ATemplate
+    network: {{ network }}
+    source:
+      abi: Rain721A
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      entities:
+        - Implementation
+        - NewChild
+      abis:
+        - name: Rain721A
+          file: ./abis/Rain721A.json
+      eventHandlers:
+        - event: Construct((string,string,string,uint256,address,address))
+          handler: handleConstruct
+        - event: Initialize((address,address,(bytes[],uint256[])))
+          handler: handleInitialize
+        - event: OwnershipTransferred(indexed address,indexed address)
+          handler: handleOwnershipTransferred
+        - event: RecipientChanged(address)
+          handler: handleRecipientChanged
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleTransfer
+      file: ./src/rain721a.ts

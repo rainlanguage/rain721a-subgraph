@@ -1,0 +1,41 @@
+type Rain721AAFactory @entity {
+  id: ID!
+  address: Bytes!
+  children: [Rain721A!]
+  childrenCount: BigInt!
+}
+
+type Rain721A @entity {
+  id: ID!
+  deployer: Bytes!
+  deployTimestamp: BigInt!
+  deployBockNumber: BigInt!
+  name: String
+  symbol: String
+  supplyLimit: BigInt
+  baseURI: String
+  owner: Bytes
+  recipient: Bytes
+  vmStateBuilder: Bytes
+  vmStateConfig: StateConfig
+}
+
+type StateConfig @entity {
+  id: ID!
+  sources: [Bytes!]!
+  constants: [BigInt!]!
+}
+
+type Holder @entity{
+  id: ID!
+  address: Bytes!
+  nfts: [NFT!]
+}
+
+type NFT @entity {
+  id: ID!
+  tokenId: BigInt!
+  owner: Bytes!
+  tokenURI: String!
+  contract: Bytes!
+}
