@@ -1,12 +1,12 @@
 import { BigInt } from "@graphprotocol/graph-ts";
 import { NewChild } from "../generated/Rain721AFactory/Rain721AFactory";
 import { Rain721ATemplate } from "../generated/templates";
-import { Rain721A, Rain721AAFactory } from "../generated/schema";
+import { Rain721A, Rain721AFactory } from "../generated/schema";
 
 export function handleNewChild(event: NewChild): void {
-  let rain721aFactory = Rain721AAFactory.load(event.address.toHex());
+  let rain721aFactory = Rain721AFactory.load(event.address.toHex());
   if (!rain721aFactory) {
-    rain721aFactory = new Rain721AAFactory(event.address.toHex());
+    rain721aFactory = new Rain721AFactory(event.address.toHex());
     rain721aFactory.address = event.address;
     rain721aFactory.children = [];
     rain721aFactory.childrenCount = BigInt.fromI32(0);

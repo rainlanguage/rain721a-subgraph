@@ -1,4 +1,4 @@
-type Rain721AAFactory @entity {
+type Rain721AFactory @entity {
   id: ID!
   address: Bytes!
   children: [Rain721A!]

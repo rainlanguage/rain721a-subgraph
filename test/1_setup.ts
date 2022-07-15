@@ -7,10 +7,11 @@ import {
   InitializeConfigStruct,
   Rain721A,
 } from "../typechain/Rain721A";
+import { ApolloFetch} from "apollo-fetch";
 import { Rain721AFactory } from "../typechain/Rain721AFactory";
 import { Token } from "../typechain/Token";
 import { ReserveTokenERC1155 } from "../typechain/ReserveTokenERC1155";
-import { exec, fetchFile, writeFile } from "./utils";
+import { delay, exec, fetchFile, fetchSubgraph, waitForSubgraphToBeSynced, writeFile } from "./utils";
 
 export let rain721aFactory: Rain721AFactory;
 export let rain721AStateBuilder: Rain721AStateBuilder;
@@ -30,7 +31,9 @@ export let recipient: SignerWithAddress,
   buyer6: SignerWithAddress,
   buyer7: SignerWithAddress;
 
+export let subgraph: ApolloFetch
 export let config;
+const subgraphName = "beehive-innovation/rain-protocol";
 
 before(async () => {
   console.log("Setting up environment for Rain721A test");
@@ -91,4 +94,7 @@ before(async () => {
   } catch (error) {
     console.log(`Subgraph deployment failed : ${error}`);
   }
+
+  subgraph = fetchSubgraph(subgraphName);
+  await delay(1000)
 });
