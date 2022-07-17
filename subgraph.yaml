@@ -8,8 +8,8 @@ dataSources:
     name: Rain721AFactory
     network: localhost
     source:
-      address: "0xc351628EB244ec633d5f21fBD6621e1a683B1181"
-      startBlock: 60
+      address: "0x3aAde2dCD2Df6a8cAc689EE797591b2913658659"
+      startBlock: 200
       abi: Rain721AFactory
     mapping:
       kind: ethereum/events

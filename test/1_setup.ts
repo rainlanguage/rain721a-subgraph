@@ -12,6 +12,7 @@ import { Rain721AFactory } from "../typechain/Rain721AFactory";
 import { Token } from "../typechain/Token";
 import { ReserveTokenERC1155 } from "../typechain/ReserveTokenERC1155";
 import { delay, exec, fetchFile, fetchSubgraph, waitForSubgraphToBeSynced, writeFile } from "./utils";
+import { exit } from "process";
 
 export let rain721aFactory: Rain721AFactory;
 export let rain721AStateBuilder: Rain721AStateBuilder;
@@ -93,6 +94,7 @@ before(async () => {
     exec(`npm run deploy:localhost`);
   } catch (error) {
     console.log(`Subgraph deployment failed : ${error}`);
+    exit(0);
   }
 
   subgraph = fetchSubgraph(subgraphName);
