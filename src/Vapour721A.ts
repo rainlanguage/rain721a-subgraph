@@ -1,58 +1,58 @@
-import { Holder, NFT, Rain721A, StateConfig } from "../generated/schema";
+import { Holder, NFT, Vapour721A, StateConfig } from "../generated/schema";
 import {
   Construct,
   Initialize,
   OwnershipTransferred,
   RecipientChanged,
   Transfer,
-} from "../generated/templates/Rain721ATemplate/Rain721A";
+} from "../generated/templates/Vapour721ATemplate/Vapour721A";
 import { ZERO_ADDRESS } from "./utils";
 export function handleConstruct(event: Construct): void {
-  let rain721A = Rain721A.load(event.address.toHex());
-  if (rain721A) {
-    rain721A.name = event.params.config_.name;
-    rain721A.symbol = event.params.config_.symbol;
-    rain721A.baseURI = event.params.config_.baseURI;
-    rain721A.owner = event.params.config_.owner;
-    rain721A.recipient = event.params.config_.recipient;
-    rain721A.supplyLimit = event.params.config_.supplyLimit;
-    rain721A.save();
+  let vapour721A = Vapour721A.load(event.address.toHex());
+  if (vapour721A) {
+    vapour721A.name = event.params.config_.name;
+    vapour721A.symbol = event.params.config_.symbol;
+    vapour721A.baseURI = event.params.config_.baseURI;
+    vapour721A.owner = event.params.config_.owner;
+    vapour721A.recipient = event.params.config_.recipient;
+    vapour721A.supplyLimit = event.params.config_.supplyLimit;
+    vapour721A.save();
   }
 }
 
 export function handleInitialize(event: Initialize): void {
-  let rain721A = Rain721A.load(event.address.toHex());
-  if (rain721A) {
+  let vapour721A = Vapour721A.load(event.address.toHex());
+  if (vapour721A) {
     let vmStateConfig = new StateConfig(event.address.toHex());
     vmStateConfig.sources = event.params.config_.vmStateConfig.sources;
     vmStateConfig.constants = event.params.config_.vmStateConfig.constants;
 
     vmStateConfig.save();
-    rain721A.vmStateConfig = vmStateConfig.id;
+    vapour721A.vmStateConfig = vmStateConfig.id;
 
-    rain721A.vmStateBuilder = event.params.config_.vmStateBuilder;
-    rain721A.save();
+    vapour721A.vmStateBuilder = event.params.config_.vmStateBuilder;
+    vapour721A.save();
   }
 }
 
 export function handleOwnershipTransferred(event: OwnershipTransferred): void {
-  let rain721A = Rain721A.load(event.address.toHex());
-  if (rain721A) {
-    rain721A.owner = event.params.newOwner;
-    rain721A.save();
+  let vapour721A = Vapour721A.load(event.address.toHex());
+  if (vapour721A) {
+    vapour721A.owner = event.params.newOwner;
+    vapour721A.save();
   }
 }
 
 export function handleRecipientChanged(event: RecipientChanged): void {
-  let rain721A = Rain721A.load(event.address.toHex());
-  if (rain721A) {
-    rain721A.recipient = event.params.newRecipient;
-    rain721A.save();
+  let vapour721A = Vapour721A.load(event.address.toHex());
+  if (vapour721A) {
+    vapour721A.recipient = event.params.newRecipient;
+    vapour721A.save();
   }
 }
 
 export function handleTransfer(event: Transfer): void {
-  let rain721a = Rain721A.load(event.address.toHex());
+  let rain721a = Vapour721A.load(event.address.toHex());
   if (rain721a) {
     let receiver = Holder.load(
       [event.address.toHex(), event.params.to.toHex()].join("-")
@@ -74,6 +74,12 @@ export function handleTransfer(event: Transfer): void {
       nft.tokenId = event.params.tokenId;
       nft.tokenURI = rain721a.baseURI + "/" + event.params.tokenId.toString() + ".json";
       nft.contract = event.address;
+
+      let nfts = rain721a.nfts;
+      if(nfts) nfts.push(nft.id);
+      rain721a.nfts = nfts;
+
+      rain721a.save()
     }
     if (receiver) {
       nft.owner = receiver.address;

@@ -5,12 +5,12 @@ schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum
-    name: Rain721AFactory
+    name: Vapour721AFactory
     network: {{ network }}
     source:
-      address: "{{ rain721aFactory }}"
-      startBlock: {{ rain721aFactoryBlock }}
-      abi: Rain721AFactory
+      address: "{{ vapour721AFactory }}"
+      startBlock: {{ vapour721AFactoryBlock }}
+      abi: Vapour721AFactory
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.5
@@ -19,18 +19,18 @@ dataSources:
         - Implementation
         - NewChild
       abis:
-        - name: Rain721AFactory
-          file: ./abis/Rain721AFactory.json
+        - name: Vapour721AFactory
+          file: ./abis/Vapour721AFactory.json
       eventHandlers:
         - event: NewChild(address,address)
           handler: handleNewChild
-      file: ./src/rain721aFactory.ts
+      file: ./src/Vapour721AFactory.ts
 templates:
   - kind: ethereum
-    name: Rain721ATemplate
+    name: Vapour721ATemplate
     network: {{ network }}
     source:
-      abi: Rain721A
+      abi: Vapour721A
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.5
@@ -39,10 +39,10 @@ templates:
         - Implementation
         - NewChild
       abis:
-        - name: Rain721A
-          file: ./abis/Rain721A.json
+        - name: Vapour721A
+          file: ./abis/Vapour721A.json
       eventHandlers:
-        - event: Construct((string,string,string,uint256,address,address))
+        - event: Construct((string,string,string,uint256,address,address,uint256))
           handler: handleConstruct
         - event: Initialize((address,address,(bytes[],uint256[])))
           handler: handleInitialize
@@ -52,4 +52,4 @@ templates:
           handler: handleRecipientChanged
         - event: Transfer(indexed address,indexed address,indexed uint256)
           handler: handleTransfer
-      file: ./src/rain721a.ts
+      file: ./src/vapour721A.ts

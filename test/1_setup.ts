@@ -1,22 +1,22 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import hre, { ethers } from "hardhat";
 import path from "path";
-import { Rain721AStateBuilder } from "../typechain/Rain721AStateBuilder";
+import { Vapour721AStateBuilder } from "../typechain/Vapour721AStateBuilder";
 import {
   ConstructorConfigStruct,
   InitializeConfigStruct,
-  Rain721A,
-} from "../typechain/Rain721A";
+  Vapour721A,
+} from "../typechain/Vapour721A";
 import { ApolloFetch} from "apollo-fetch";
-import { Rain721AFactory } from "../typechain/Rain721AFactory";
+import { Vapour721AFactory } from "../typechain/Vapour721AFactory";
 import { Token } from "../typechain/Token";
 import { ReserveTokenERC1155 } from "../typechain/ReserveTokenERC1155";
-import { delay, exec, fetchFile, fetchSubgraph, waitForSubgraphToBeSynced, writeFile } from "./utils";
+import { delay, exec, fetchFile, fetchSubgraph, writeFile } from "./utils";
 import { exit } from "process";
 
-export let rain721aFactory: Rain721AFactory;
-export let rain721AStateBuilder: Rain721AStateBuilder;
-export let rain721a: Rain721A;
+export let vapour721AFactory: Vapour721AFactory;
+export let vapour721AStateBuilder: Vapour721AStateBuilder;
+export let rain721a: Vapour721A;
 export let rain721aConstructorConfig: ConstructorConfigStruct;
 export let rain721aInitializeConfig: InitializeConfigStruct;
 export let rTKN: Token;
@@ -37,7 +37,7 @@ export let config;
 const subgraphName = "beehive-innovation/rain-protocol";
 
 before(async () => {
-  console.log("Setting up environment for Rain721A test");
+  console.log("Setting up environment for Vapour721A test");
 
   const signers = await ethers.getSigners();
   recipient = signers[0];
@@ -51,16 +51,17 @@ before(async () => {
   buyer6 = signers[8];
   buyer7 = signers[9];
 
-  const Rain721AFactory = await ethers.getContractFactory("Rain721AFactory");
-  rain721aFactory = (await Rain721AFactory.deploy()) as Rain721AFactory;
-  await rain721aFactory.deployed();
-
-  const Rain721AStateBuilder = await ethers.getContractFactory(
-    "Rain721AStateBuilder"
+  const Vapour721AStateBuilder = await ethers.getContractFactory(
+    "Vapour721AStateBuilder"
   );
-  rain721AStateBuilder =
-    (await Rain721AStateBuilder.deploy()) as Rain721AStateBuilder;
-  await rain721AStateBuilder.deployed();
+  vapour721AStateBuilder =
+    (await Vapour721AStateBuilder.deploy()) as Vapour721AStateBuilder;
+  await vapour721AStateBuilder.deployed();
+
+  const Vapour721AFactory = await ethers.getContractFactory("Vapour721AFactory");
+  vapour721AFactory = (await Vapour721AFactory.deploy(vapour721AStateBuilder.address)) as Vapour721AFactory;
+  await vapour721AFactory.deployed();
+
 
   const Erc20 = await ethers.getContractFactory("Token");
 
@@ -80,9 +81,9 @@ before(async () => {
 
   config.network = hre.network.name;
 
-  config.rain721aFactory = rain721aFactory.address;
-  config.rain721aFactoryBlock = rain721aFactory.deployTransaction.blockNumber;
-  config.rain721AStateBuilder = rain721AStateBuilder.address;
+  config.vapour721AFactory = vapour721AFactory.address;
+  config.vapour721AFactoryBlock = vapour721AFactory.deployTransaction.blockNumber;
+  config.vapour721AStateBuilder = vapour721AStateBuilder.address;
 
   const pathConfigLocal = path.resolve(
     __dirname,

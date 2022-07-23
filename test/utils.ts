@@ -7,7 +7,7 @@ import fs from "fs";
 import path from "path";
 import { execSync } from "child_process";
 import { AllStandardOps } from "rain-sdk";
-import { Rain721AFactory, NewChildEvent } from "../typechain/Rain721AFactory";
+import { Vapour721AFactory, NewChildEvent } from "../typechain/Vapour721AFactory";
 import { BigNumber, Contract, ContractTransaction } from "ethers";
 const logger = new Logger(version);
 
@@ -300,7 +300,7 @@ export function BNtoInt(x: BigNumber): number {
 }
 
 export const getChild = async (
-  factory: Rain721AFactory,
+  factory: Vapour721AFactory,
   transaction: ContractTransaction
 ): Promise<string> => {
   const { child } = (await getEventArgs(
@@ -370,7 +370,7 @@ export const waitForSubgraphToBeSynced = async (
   /**
    * Waiting for 60s by default
    * Does not care about waiting the 60s -  the function already try to handle if does not receive
-   * a response. If the subgraph need to wait for a big number of blocks, would be good increse
+   * a response. If the subgraph need to wait for a big number of blocks, would be good increase
    * the seconds to wait by sync.
    */
   const deadline = Date.now() + seconds * 1000;

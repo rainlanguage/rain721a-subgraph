@@ -1,16 +1,9 @@
 import { FetchResult } from "apollo-fetch";
-import { constants } from "buffer";
 import { expect } from "chai";
-import { BigNumber } from "ethers";
 import { ethers } from "hardhat";
 import { StateConfig } from "rain-sdk";
-import {
-  ConstructorConfigStruct,
-  InitializeConfigStruct,
-  OwnershipTransferredEvent,
-  Rain721A,
-} from "../typechain/Rain721A";
-import { NewChildEvent } from "../typechain/Rain721AFactory";
+import { ConstructorConfigStruct, Vapour721A } from "../typechain/Vapour721A";
+import { NewChildEvent } from "../typechain/Vapour721AFactory";
 import {
   buyer0,
   buyer1,
@@ -18,14 +11,14 @@ import {
   buyer7,
   config,
   owner,
-  rain721aFactory,
+  vapour721AFactory,
   recipient,
   subgraph,
+  vapour721AStateBuilder,
 } from "./1_setup";
 import {
   arrayify,
   concat,
-  eighteenZeros,
   getEventArgs,
   op,
   Opcode,
@@ -33,11 +26,10 @@ import {
   ZERO_ADDRESS,
 } from "./utils";
 
-let rain721a: Rain721A;
+let vapour721A: Vapour721A;
 let constructorConfig: ConstructorConfigStruct;
-let initializeConfig: InitializeConfigStruct;
-let vmStateConfig: StateConfig
-describe("Rain721A subgraph tests", () => {
+let vmStateConfig: StateConfig;
+describe("Vapour721A subgraph tests", () => {
   let response;
   let child, sender;
   describe("Should create Factory entity and child entity correctly.", () => {
@@ -49,6 +41,7 @@ describe("Rain721A subgraph tests", () => {
         baseURI: "baseURI",
         recipient: recipient.address,
         owner: owner.address,
+        royaltyBPS: 1000,
       };
 
       vmStateConfig = {
@@ -56,29 +49,26 @@ describe("Rain721A subgraph tests", () => {
         constants: [10000, 0],
       };
 
-      initializeConfig = {
-        vmStateBuilder: config.rain721AStateBuilder,
-        currency: ZERO_ADDRESS,
-        vmStateConfig: vmStateConfig,
-      };
-      const deployTx = await rain721aFactory.connect(buyer0).createChildTyped(
-        constructorConfig,
-        initializeConfig
-      );
+      const deployTx = await vapour721AFactory
+        .connect(buyer0)
+        .createChildTyped(constructorConfig, ZERO_ADDRESS, vmStateConfig);
 
       [sender, child] = (await getEventArgs(
         deployTx,
         "NewChild",
-        rain721aFactory
+        vapour721AFactory
       )) as NewChildEvent["args"];
 
-      rain721a = (await ethers.getContractAt("Rain721A", child)) as Rain721A;
+      vapour721A = (await ethers.getContractAt(
+        "Vapour721A",
+        child
+      )) as Vapour721A;
       await waitForSubgraphToBeSynced(1000);
 
       response = (await subgraph({
         query: `
             {
-                rain721AFactory(id: "${config.rain721aFactory.toLowerCase()}"){
+              vapour721AFactory(id: "${config.vapour721AFactory.toLowerCase()}"){
                     address
                     children{
                     id
@@ -90,18 +80,20 @@ describe("Rain721A subgraph tests", () => {
     });
 
     it("Should create Factory entity correctly", async () => {
-      const factory = response.data.rain721AFactory;
-      expect(factory.address).to.equals(config.rain721aFactory.toLowerCase());
+      const factory = response.data.vapour721AFactory;
+      expect(factory.address).to.equals(config.vapour721AFactory.toLowerCase());
       expect(factory.children).to.lengthOf(1);
-      expect(factory.children).to.deep.include({id:rain721a.address.toLowerCase()});
+      expect(factory.children).to.deep.include({
+        id: vapour721A.address.toLowerCase(),
+      });
       expect(factory.childrenCount).to.equals("1");
     });
 
-    it("Should create Rain721A entity correctly", async () => {
+    it("Should create Vapour721A entity correctly", async () => {
       response = (await subgraph({
         query: `
                 {
-                    rain721A(id: "${rain721a.address.toLowerCase()}"){
+                  vapour721A(id: "${vapour721A.address.toLowerCase()}"){
                         id
                         name
                         symbol
@@ -119,31 +111,33 @@ describe("Rain721A subgraph tests", () => {
                 }`,
       })) as FetchResult;
 
-      const rain721AData = response.data.rain721A;
+      const vapour721AData = response.data.vapour721A;
 
-      expect(rain721AData.id).to.equals(rain721a.address.toLowerCase());
-      expect(rain721AData.name).to.equals(constructorConfig.name);
-      expect(rain721AData.symbol).to.equals(constructorConfig.symbol);
-      expect(rain721AData.supplyLimit).to.equals(
-         constructorConfig.supplyLimit.toString()
+      expect(vapour721AData.id).to.equals(vapour721A.address.toLowerCase());
+      expect(vapour721AData.name).to.equals(constructorConfig.name);
+      expect(vapour721AData.symbol).to.equals(constructorConfig.symbol);
+      expect(vapour721AData.supplyLimit).to.equals(
+        constructorConfig.supplyLimit.toString()
       );
-      expect(rain721AData.baseURI).to.equals(constructorConfig.baseURI);
-      expect(rain721AData.owner).to.equals(
+      expect(vapour721AData.baseURI).to.equals(constructorConfig.baseURI);
+      expect(vapour721AData.owner).to.equals(
         constructorConfig.owner.toLowerCase()
       );
-      expect(rain721AData.recipient).to.equals(
+      expect(vapour721AData.recipient).to.equals(
         constructorConfig.recipient.toLowerCase()
       );
-      expect(rain721AData.deployer).to.equals(buyer0.address.toLowerCase());
-      expect(rain721AData.vmStateBuilder).to.equals(
-        initializeConfig.vmStateBuilder.toLowerCase()
+      expect(vapour721AData.deployer).to.equals(buyer0.address.toLowerCase());
+      expect(vapour721AData.vmStateBuilder).to.equals(
+        vapour721AStateBuilder.address.toLowerCase()
       );
 
-      let sg_stateConfig = rain721AData.vmStateConfig;
-      const constants = vmStateConfig.constants.map(ele => ele.toString());
+      let sg_stateConfig = vapour721AData.vmStateConfig;
+      const constants = vmStateConfig.constants.map((ele) => ele.toString());
       const sources = vmStateConfig.sources[0];
-      
-      const sg_constants = sg_stateConfig.constants.map(ele => ele.toString());
+
+      const sg_constants = sg_stateConfig.constants.map((ele) =>
+        ele.toString()
+      );
       const sg_sources = arrayify(sg_stateConfig.sources[0]);
 
       expect(constants).to.deep.equals(sg_constants);
@@ -154,46 +148,50 @@ describe("Rain721A subgraph tests", () => {
   describe("Owner Test", () => {
     let response: FetchResult;
     before(async () => {
-      let ownerTx = await rain721a.connect(owner).transferOwnership(buyer7.address);
+      let ownerTx = await vapour721A
+        .connect(owner)
+        .transferOwnership(buyer7.address);
 
       await waitForSubgraphToBeSynced(1000);
 
       response = (await subgraph({
-        query:`
+        query: `
         {
-          rain721A(id: "${rain721a.address.toLowerCase()}"){
+          vapour721A(id: "${vapour721A.address.toLowerCase()}"){
             owner
           }
-        }`
+        }`,
       })) as FetchResult;
     });
 
-    it("Should change the owner",async () => {
-      let rain721AData = response.data.rain721A;
-      expect(rain721AData.owner).to.equals(buyer7.address.toLowerCase());
+    it("Should change the owner", async () => {
+      let vapour721AData = response.data.vapour721A;
+      expect(vapour721AData.owner).to.equals(buyer7.address.toLowerCase());
     });
   });
 
   describe("Recipient Test", () => {
     let response: FetchResult;
     before(async () => {
-      let recipientTx = await rain721a.connect(recipient).setRecipient(buyer7.address);
+      let recipientTx = await vapour721A
+        .connect(recipient)
+        .setRecipient(buyer7.address);
 
       await waitForSubgraphToBeSynced(1000);
 
       response = (await subgraph({
-        query:`
+        query: `
         {
-          rain721A(id: "${rain721a.address.toLowerCase()}"){
+          vapour721A(id: "${vapour721A.address.toLowerCase()}"){
             recipient
           }
-        }`
+        }`,
       })) as FetchResult;
     });
 
-    it("Should change the recipient",async () => {
-      let rain721AData = response.data.rain721A;
-      expect(rain721AData.recipient).to.equals(buyer7.address.toLowerCase());
+    it("Should change the recipient", async () => {
+      let vapour721AData = response.data.vapour721A;
+      expect(vapour721AData.recipient).to.equals(buyer7.address.toLowerCase());
     });
   });
 
@@ -201,7 +199,11 @@ describe("Rain721A subgraph tests", () => {
     let nft_response: FetchResult;
     let holder_response: FetchResult;
     before(async () => {
-      await rain721a.connect(buyer1).mintNFT(1);
+      await vapour721A.connect(buyer1).mintNFT({
+        minimumUnits: 1,
+        maximumPrice: 0,
+        desiredUnits: 1,
+      });
 
       await waitForSubgraphToBeSynced(1000);
 
@@ -215,13 +217,13 @@ describe("Rain721A subgraph tests", () => {
           tokenURI
           contract
           }
-        }`
+        }`,
       })) as FetchResult;
 
       holder_response = (await subgraph({
         query: `
         {
-         holder(id: "${rain721a.address.toLowerCase()}-${buyer1.address.toLowerCase()}"){
+         holder(id: "${vapour721A.address.toLowerCase()}-${buyer1.address.toLowerCase()}"){
             nfts{
               tokenId
               owner
@@ -230,22 +232,21 @@ describe("Rain721A subgraph tests", () => {
             }
             address
           }
-        }`
+        }`,
       })) as FetchResult;
-
     });
-    
-    it("Should create NFTs entity correctly",async () => {
+
+    it("Should create NFTs entity correctly", async () => {
       const nfts = nft_response.data.nfts;
       expect(nfts).to.lengthOf(1);
-      expect(nfts[0].id).to.deep.include(`1-${rain721a.address.toLowerCase()}`);
+      expect(nfts[0].id).to.deep.include(`1-${vapour721A.address.toLowerCase()}`);
       expect(nfts[0].tokenId).to.equals("1");
       expect(nfts[0].owner).to.equals(buyer1.address.toLowerCase());
       expect(nfts[0].tokenURI).to.equals(`baseURI/${nfts[0].tokenId}.json`);
-      expect(nfts[0].contract).to.equals(rain721a.address.toLowerCase());
+      expect(nfts[0].contract).to.equals(vapour721A.address.toLowerCase());
     });
 
-    it("Should create Holder entity correctly",async () => {
+    it("Should create Holder entity correctly", async () => {
       const holder = holder_response.data.holder;
       expect(holder.nfts).to.lengthOf(1);
       expect(holder.address).to.equals(buyer1.address.toLowerCase());
@@ -256,7 +257,11 @@ describe("Rain721A subgraph tests", () => {
     let nft_response: FetchResult;
     let holder_response: FetchResult;
     before(async () => {
-      await rain721a.connect(buyer2).mintNFT(10);
+      await vapour721A.connect(buyer2).mintNFT({
+        minimumUnits: 1,
+        maximumPrice: 0,
+        desiredUnits: 10,
+      });
 
       await waitForSubgraphToBeSynced(1000);
 
@@ -270,13 +275,13 @@ describe("Rain721A subgraph tests", () => {
           tokenURI
           contract
           }
-        }`
+        }`,
       })) as FetchResult;
 
       holder_response = (await subgraph({
         query: `
         {
-         holder(id: "${rain721a.address.toLowerCase()}-${buyer2.address.toLowerCase()}"){
+         holder(id: "${vapour721A.address.toLowerCase()}-${buyer2.address.toLowerCase()}"){
             nfts(orderBy:tokenId){
               tokenId
               owner
@@ -285,17 +290,16 @@ describe("Rain721A subgraph tests", () => {
             }
             address
           }
-        }`
+        }`,
       })) as FetchResult;
-
     });
-    
-    it("Should create NFTs entity correctly",async () => {
+
+    it("Should create NFTs entity correctly", async () => {
       const nfts = nft_response.data.nfts;
       expect(nfts).to.lengthOf(11);
     });
 
-    it("Should create Holder entity correctly",async () => {
+    it("Should create Holder entity correctly", async () => {
       const holder = holder_response.data.holder;
       expect(holder.nfts).to.lengthOf(10);
       expect(holder.address).to.equals(buyer2.address.toLowerCase());
@@ -306,7 +310,7 @@ describe("Rain721A subgraph tests", () => {
         expect(nft.tokenId).to.equals((i + 2).toString());
         expect(nft.owner).to.equals(buyer2.address.toLowerCase());
         expect(nft.tokenURI).to.equals(`baseURI/${nft.tokenId}.json`);
-        expect(nft.contract).to.equals(rain721a.address.toLowerCase());
+        expect(nft.contract).to.equals(vapour721A.address.toLowerCase());
       });
     });
   });
