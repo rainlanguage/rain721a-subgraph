@@ -41,6 +41,8 @@ templates:
       abis:
         - name: Vapour721A
           file: ./abis/Vapour721A.json
+        - name: ERC20
+          file: ./abis/ERC20.json
       eventHandlers:
         - event: Construct((string,string,string,uint256,address,address,uint256))
           handler: handleConstruct

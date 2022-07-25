@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@beehiveinnovation/rain-protocol": "git+https://github.com/beehive-innovation/rain-protocol.git#b4af313dbe0dd2b2c4f630e7f7fe37a9ac6e073f",
-    "@beehiveinnovation/rain721a": "git+https://github.com/beehive-innovation/rain721a.git#361417b792a0045e80a33f6b725380b16f4e4c4d",
+    "@beehiveinnovation/rain721a": "git+https://github.com/beehive-innovation/rain721a.git#2ce94af77ca2db328c11fe507797f82d325f7f4f",
     "rain-sdk": "2.0.0",
     "erc721a": "^3.3.0",
     "@nomiclabs/hardhat-ethers": "^2.0.3",

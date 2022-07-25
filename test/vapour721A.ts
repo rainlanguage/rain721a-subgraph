@@ -15,6 +15,7 @@ import {
   recipient,
   subgraph,
   vapour721AStateBuilder,
+  rTKN,
 } from "./1_setup";
 import {
   arrayify,
@@ -107,6 +108,9 @@ describe("Vapour721A subgraph tests", () => {
                         owner
                         recipient
                         baseURI
+                        currency{
+                          id
+                        }
                     }
                 }`,
       })) as FetchResult;
@@ -131,6 +135,8 @@ describe("Vapour721A subgraph tests", () => {
         vapour721AStateBuilder.address.toLowerCase()
       );
 
+      expect(vapour721AData.currency.id).to.equals(ZERO_ADDRESS);
+
       let sg_stateConfig = vapour721AData.vmStateConfig;
       const constants = vmStateConfig.constants.map((ele) => ele.toString());
       const sources = vmStateConfig.sources[0];
@@ -142,6 +148,25 @@ describe("Vapour721A subgraph tests", () => {
 
       expect(constants).to.deep.equals(sg_constants);
       expect(sources).to.deep.equals(sg_sources);
+    });
+
+    describe("Should create token entity correctly", () => {
+      it("Native Token test", async () => {
+        response = (await subgraph({query:`{
+          token(id: "${ZERO_ADDRESS}"){
+            name
+            symbol
+            decimals
+            totalSupply
+          }
+        }`}))
+
+        const token = response.data.token;
+        expect(token.name).to.equals("Matic Token");
+        expect(token.symbol).to.equals("MATIC");
+        expect(token.decimals).to.equals(18);
+        expect(token.totalSupply).to.equals("0");
+      });
     });
   });
 
@@ -239,7 +264,9 @@ describe("Vapour721A subgraph tests", () => {
     it("Should create NFTs entity correctly", async () => {
       const nfts = nft_response.data.nfts;
       expect(nfts).to.lengthOf(1);
-      expect(nfts[0].id).to.deep.include(`1-${vapour721A.address.toLowerCase()}`);
+      expect(nfts[0].id).to.deep.include(
+        `1-${vapour721A.address.toLowerCase()}`
+      );
       expect(nfts[0].tokenId).to.equals("1");
       expect(nfts[0].owner).to.equals(buyer1.address.toLowerCase());
       expect(nfts[0].tokenURI).to.equals(`baseURI/${nfts[0].tokenId}.json`);
@@ -313,5 +340,66 @@ describe("Vapour721A subgraph tests", () => {
         expect(nft.contract).to.equals(vapour721A.address.toLowerCase());
       });
     });
+  });
+
+});
+
+describe("ERC20 Token test", () => {
+  let erc20vapour721A: Vapour721A;
+  before(async () => {
+    let ERC20constructorConfig = {
+      name: "Rain721NFT",
+      symbol: "RAIN",
+      supplyLimit: 10000,
+      baseURI: "baseURI",
+      recipient: recipient.address,
+      owner: owner.address,
+      royaltyBPS: 1000,
+    };
+
+    await rTKN.connect(buyer0).mintTokens(1000);
+    const deployTx = await vapour721AFactory
+      .connect(buyer0)
+      .createChildTyped(ERC20constructorConfig, rTKN.address, vmStateConfig);
+
+    let [sender, child] = (await getEventArgs(
+      deployTx,
+      "NewChild",
+      vapour721AFactory
+    )) as NewChildEvent["args"];
+
+    erc20vapour721A = (await ethers.getContractAt(
+      "Vapour721A",
+      child
+    )) as Vapour721A;
+  });
+
+  it("Should create correct erc20 token",async () => {
+    await waitForSubgraphToBeSynced(1000);
+    const response = (await subgraph({query:
+    `{
+      token(id: "${rTKN.address.toLowerCase()}"){
+        id
+        name
+        symbol
+        decimals
+        totalSupply
+      }
+      vapour721A(id: "${erc20vapour721A.address.toLowerCase()}"){
+        currency{
+          id
+        }
+      }
+    }`})) as FetchResult;
+
+    let token = response.data.token;
+    let currency = response.data.vapour721A.currency;
+    expect(token.id).to.equals(rTKN.address.toLowerCase());
+    expect(token.name).to.equals(await rTKN.name());
+    expect(token.symbol).to.equals(await rTKN.symbol());
+    expect(token.decimals).to.equals(await rTKN.decimals());
+    expect(token.totalSupply).to.equals(await rTKN.totalSupply());
+
+    expect(currency.id).to.equals(rTKN.address.toLowerCase());
   });
 });

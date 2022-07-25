@@ -1,4 +1,11 @@
-import { Holder, NFT, Vapour721A, StateConfig } from "../generated/schema";
+import { ERC20 } from "../generated/templates/Vapour721ATemplate/ERC20";
+import {
+  Holder,
+  NFT,
+  Vapour721A,
+  StateConfig,
+  Token,
+} from "../generated/schema";
 import {
   Construct,
   Initialize,
@@ -6,7 +13,8 @@ import {
   RecipientChanged,
   Transfer,
 } from "../generated/templates/Vapour721ATemplate/Vapour721A";
-import { ZERO_ADDRESS } from "./utils";
+
+import { ZERO, ZERO_ADDRESS } from "./utils";
 export function handleConstruct(event: Construct): void {
   let vapour721A = Vapour721A.load(event.address.toHex());
   if (vapour721A) {
@@ -16,6 +24,7 @@ export function handleConstruct(event: Construct): void {
     vapour721A.owner = event.params.config_.owner;
     vapour721A.recipient = event.params.config_.recipient;
     vapour721A.supplyLimit = event.params.config_.supplyLimit;
+    vapour721A.royaltyBPS = event.params.config_.royaltyBPS;
     vapour721A.save();
   }
 }
@@ -31,6 +40,35 @@ export function handleInitialize(event: Initialize): void {
     vapour721A.vmStateConfig = vmStateConfig.id;
 
     vapour721A.vmStateBuilder = event.params.config_.vmStateBuilder;
+    if (event.params.config_.currency.toHex() == ZERO_ADDRESS) {
+      let currency = Token.load(event.params.config_.currency.toHex());
+      if (!currency) {
+        currency = new Token(event.params.config_.currency.toHex());
+        currency.name = "Matic Token";
+        currency.symbol = "MATIC";
+        currency.decimals = 18;
+        currency.totalSupply = ZERO;
+        currency.save();
+      }
+      vapour721A.currency = currency.id;
+    } else {
+      let currency = Token.load(event.params.config_.currency.toHex());
+      let tokenContract = ERC20.bind(event.params.config_.currency);
+      if (!currency) {
+        currency = new Token(event.params.config_.currency.toHex());
+        let name = tokenContract.try_name();
+        let symbol = tokenContract.try_symbol();
+        let decimals = tokenContract.try_decimals();
+        currency.name = !name.reverted ? name.value : "ERROR";
+        currency.symbol = !symbol.reverted ? symbol.value : "ERROR";
+        currency.decimals = !decimals.reverted ? decimals.value : 0;
+      }
+      let totalSupply = tokenContract.try_totalSupply();
+      currency.totalSupply = !totalSupply.reverted ? totalSupply.value : ZERO;
+      currency.save();
+
+      vapour721A.currency = currency.id;
+    }
     vapour721A.save();
   }
 }
@@ -72,14 +110,15 @@ export function handleTransfer(event: Transfer): void {
         [event.params.tokenId.toString(), event.address.toHex()].join("-")
       );
       nft.tokenId = event.params.tokenId;
-      nft.tokenURI = rain721a.baseURI + "/" + event.params.tokenId.toString() + ".json";
+      nft.tokenURI =
+        rain721a.baseURI + "/" + event.params.tokenId.toString() + ".json";
       nft.contract = event.address;
 
       let nfts = rain721a.nfts;
-      if(nfts) nfts.push(nft.id);
+      if (nfts) nfts.push(nft.id);
       rain721a.nfts = nfts;
 
-      rain721a.save()
+      rain721a.save();
     }
     if (receiver) {
       nft.owner = receiver.address;
@@ -96,12 +135,16 @@ export function handleTransfer(event: Transfer): void {
     let sender = Holder.load(
       [event.address.toHex(), event.params.from.toHex()].join("-")
     );
-    if(sender){
+    if (sender) {
       let nfts = sender.nfts;
       let new_nfts: string[] = [];
       if (nfts) {
         for (let i = 0; i < nfts.length; i++) {
-          if (nfts[i] != [event.params.tokenId.toString(), event.address.toHex()].join("-")) new_nfts.push(nfts[i]);
+          if (
+            nfts[i] !=
+            [event.params.tokenId.toString(), event.address.toHex()].join("-")
+          )
+            new_nfts.push(nfts[i]);
         }
       }
       sender.nfts = new_nfts;
