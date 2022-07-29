@@ -16,10 +16,12 @@ import {
   subgraph,
   vapour721AStateBuilder,
   rTKN,
+  buyer6,
 } from "./1_setup";
 import {
   arrayify,
   concat,
+  DELEGATED_MINTER,
   getEventArgs,
   op,
   Opcode,
@@ -43,6 +45,7 @@ describe("Vapour721A subgraph tests", () => {
         recipient: recipient.address,
         owner: owner.address,
         royaltyBPS: 1000,
+        admin: buyer6.address
       };
 
       vmStateConfig = {
@@ -64,6 +67,8 @@ describe("Vapour721A subgraph tests", () => {
         "Vapour721A",
         child
       )) as Vapour721A;
+
+      await vapour721A.connect(buyer6).grantRole(DELEGATED_MINTER, buyer2.address);
       await waitForSubgraphToBeSynced(1000);
 
       response = (await subgraph({
@@ -347,7 +352,7 @@ describe("Vapour721A subgraph tests", () => {
 describe("ERC20 Token test", () => {
   let erc20vapour721A: Vapour721A;
   before(async () => {
-    let ERC20constructorConfig = {
+    let ERC20constructorConfig: ConstructorConfigStruct = {
       name: "Rain721NFT",
       symbol: "RAIN",
       supplyLimit: 10000,
@@ -355,6 +360,7 @@ describe("ERC20 Token test", () => {
       recipient: recipient.address,
       owner: owner.address,
       royaltyBPS: 1000,
+      admin: buyer2.address
     };
 
     await rTKN.connect(buyer0).mintTokens(1000);

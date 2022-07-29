@@ -5,6 +5,12 @@ import {
   Vapour721A,
   StateConfig,
   Token,
+  Withdraw,
+  MintTransaction,
+  Role,
+  RoleHolder,
+  RoleGranted,
+  RoleRevoked,
 } from "../generated/schema";
 import {
   Construct,
@@ -12,9 +18,21 @@ import {
   OwnershipTransferred,
   RecipientChanged,
   Transfer,
+  Withdraw as WithdrawEvent,
+  Buy,
+  RoleAdminChanged,
+  RoleGranted as RoleGrantedEvent,
+  RoleRevoked as RoleRevokedEvent,
 } from "../generated/templates/Vapour721ATemplate/Vapour721A";
 
-import { ZERO, ZERO_ADDRESS } from "./utils";
+import {
+  DELEGATED_MINTER,
+  DELEGATED_MINTER_ADMIN,
+  ONE,
+  ZERO,
+  ZERO_ADDRESS,
+} from "./utils";
+import { BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 export function handleConstruct(event: Construct): void {
   let vapour721A = Vapour721A.load(event.address.toHex());
   if (vapour721A) {
@@ -90,8 +108,8 @@ export function handleRecipientChanged(event: RecipientChanged): void {
 }
 
 export function handleTransfer(event: Transfer): void {
-  let rain721a = Vapour721A.load(event.address.toHex());
-  if (rain721a) {
+  let vapour721A = Vapour721A.load(event.address.toHex());
+  if (vapour721A) {
     let receiver = Holder.load(
       [event.address.toHex(), event.params.to.toHex()].join("-")
     );
@@ -111,14 +129,14 @@ export function handleTransfer(event: Transfer): void {
       );
       nft.tokenId = event.params.tokenId;
       nft.tokenURI =
-        rain721a.baseURI + "/" + event.params.tokenId.toString() + ".json";
+        vapour721A.baseURI + "/" + event.params.tokenId.toString() + ".json";
       nft.contract = event.address;
 
-      let nfts = rain721a.nfts;
+      let nfts = vapour721A.nfts;
       if (nfts) nfts.push(nft.id);
-      rain721a.nfts = nfts;
+      vapour721A.nfts = nfts;
 
-      rain721a.save();
+      vapour721A.save();
     }
     if (receiver) {
       nft.owner = receiver.address;
@@ -151,4 +169,168 @@ export function handleTransfer(event: Transfer): void {
       sender.save();
     }
   }
+}
+
+export function handleWithdraw(event: WithdrawEvent): void {
+  let vapour721A = Vapour721A.load(event.address.toHex());
+  if (vapour721A) {
+    vapour721A.amountWithdrawn = event.params._totalWithdrawn;
+    vapour721A.amountPayable = ZERO;
+
+    let withdraw = new Withdraw(event.transaction.hash.toString());
+    withdraw.amount = event.params._amountWithdrawn;
+    withdraw.timeStamp = event.block.timestamp;
+    withdraw.withdrawer = event.params._withdrawer;
+    withdraw.save();
+
+    let withdrawals = vapour721A.withdrawals;
+    if (withdrawals) withdrawals.push(withdraw.id);
+    vapour721A.withdrawals = withdrawals;
+
+    vapour721A.save();
+  }
+}
+
+export function handleBuy(event: Buy): void {
+  let vapour721A = Vapour721A.load(event.address.toHex());
+  if (vapour721A) {
+    vapour721A.amountPayable = vapour721A.amountPayable.plus(
+      event.params._cost
+    );
+
+    let transaction = new MintTransaction(
+      vapour721A.mintTransactionCount.toString()
+    );
+    transaction.mintBlockNumber = event.block.number;
+    transaction.mintTimestamp = event.block.timestamp;
+    transaction.hash = event.transaction.hash.toHex();
+    transaction.cost = event.params._cost;
+    transaction.receiver = event.params._receiver;
+    transaction.units = event.params._units;
+    transaction.nfts = [];
+
+    let T_nfts = transaction.nfts;
+    let V_nfts = vapour721A.nfts;
+    let length = V_nfts ? BigInt.fromI32(V_nfts.length) : ZERO;
+    let startIndex = length.minus(event.params._units); // cause nfts are already minted
+
+    for (; startIndex < length; startIndex = startIndex.plus(ONE)) {
+      if (T_nfts && V_nfts) T_nfts.push(V_nfts[startIndex.toI32()]);
+    }
+    transaction.nfts = T_nfts;
+    transaction.save();
+
+    let mintTransactions = vapour721A.mintTransactions;
+    if (mintTransactions) mintTransactions.push(transaction.id);
+    vapour721A.mintTransactions = mintTransactions;
+
+    vapour721A.mintTransactionCount = vapour721A.mintTransactionCount.plus(ONE);
+    vapour721A.save();
+  }
+}
+
+export function handleRoleAdminChanged(event: RoleAdminChanged): void {
+  let role = new Role(event.params.role.toHex());
+  role.contract = event.address;
+  role.roleHash = event.params.role;
+  role.roleName = getRoleName(event.params.role);
+  role.roleHolders = [];
+  role.save();
+}
+
+export function handleRoleGranted(event: RoleGrantedEvent): void {
+  let roleHolder = RoleHolder.load(
+    event.address.toHex() + "-" + event.params.account.toHex()
+  );
+  let role = getRole(event.params.role, event.address);
+  
+  if (!roleHolder) {
+    roleHolder = new RoleHolder(
+      event.address.toHex() + "-" + event.params.account.toHex()
+    );
+    roleHolder.contract = event.address;
+    roleHolder.account = event.params.account;
+    if (role) roleHolder.role = role.id;
+    roleHolder.hasRole = true;
+    roleHolder.roleGrants = [];
+    roleHolder.roleRevoked = [];
+  }
+  if (roleHolder) {
+    let roleGranted = new RoleGranted(event.transaction.hash.toHex());
+    roleGranted.account = event.params.account;
+    roleGranted.sender = event.params.sender;
+    roleGranted.role = event.params.role.toHex();
+    roleGranted.emitter = event.params.sender;
+    roleGranted.contract = event.address;
+    roleGranted.transaction = event.transaction.hash.toHex();
+    roleGranted.timestamp = event.block.timestamp;
+    roleGranted.roleHolder = roleHolder.id;
+
+    roleGranted.save();
+    let roleGrants = roleHolder.roleGrants;
+    if (roleGrants) roleGrants.push(roleGranted.id);
+    roleHolder.roleGrants = roleGrants;
+    roleHolder.save();
+  }
+  if (role) {
+    let roleHolders = role.roleHolders;
+    if (roleHolders) roleHolders.push(roleHolder.id);
+    role.roleHolders = roleHolders;
+    role.save();
+  }
+}
+
+export function handleRoleRevoked(event: RoleRevokedEvent): void {
+  let roleHolder = RoleHolder.load(
+    event.address.toHex() + "-" + event.params.account.toHex()
+  );
+
+  let role = getRole(event.params.role, event.address);
+
+  if (roleHolder) {
+    let roleRevoked = new RoleRevoked(event.transaction.hash.toHex());
+    roleRevoked.transaction = event.transaction.hash.toHex();
+    roleRevoked.timestamp = event.block.timestamp;
+    roleRevoked.sender = event.params.sender;
+    roleRevoked.account = event.params.account;
+    roleRevoked.emitter = event.params.sender;
+    roleRevoked.contract = event.address;
+    if (role) roleRevoked.role = role.id;
+    roleRevoked.roleHolder = roleHolder.id;
+    roleRevoked.save();
+    
+    let rRoleRevoked = roleHolder.roleRevoked;
+    if (rRoleRevoked) rRoleRevoked.push(roleRevoked.id);
+    roleHolder.roleRevoked = rRoleRevoked;
+    roleHolder.save();
+  }
+  if (role) {
+    let roleHolders = role.roleHolders;
+    if (roleHolders && roleHolder) roleHolders.push(roleHolder.id);
+    role.roleHolders = roleHolders;
+    role.save();
+  }
+}
+
+function getRoleName(role: Bytes): string {
+  if (role.toHex() == DELEGATED_MINTER.toString()) {
+    return "DELEGATED_MINTER";
+  }
+  if (role.toHex() == DELEGATED_MINTER_ADMIN.toString()) {
+    return "DELEGATED_MINTER_ADMIN";
+  }
+  return "NONE";
+}
+
+function getRole(roleHash: Bytes, contract: Bytes): Role{
+  let role = Role.load(roleHash.toHex());
+  if(!role){
+    role = new Role(roleHash.toHex());
+    role.contract = contract;
+    role.roleHash = roleHash;
+    role.roleName = getRoleName(roleHash);
+    role.roleHolders = [];
+    role.save();
+  }
+  return role;
 }

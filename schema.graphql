@@ -21,6 +21,11 @@ type Vapour721A @entity {
   vmStateConfig: StateConfig
   currency: Token
   nfts: [NFT!]
+  amountPayable: BigInt!
+  amountWithdrawn: BigInt!
+  withdrawals: [Withdraw!]
+  mintTransactionCount: BigInt!
+  mintTransactions: [MintTransaction!]
 }
 
 type StateConfig @entity {
@@ -49,4 +54,70 @@ type Token @entity {
   symbol: String!
   totalSupply: BigInt!
   decimals: Int!
+}
+
+type Withdraw @entity {
+  id: ID!
+  withdrawer: Bytes!
+  amount: BigInt!
+  timeStamp: BigInt!
+}
+
+type MintTransaction @entity {
+  id: ID!
+  hash: String!
+  receiver: Bytes!
+  units: BigInt!
+  cost: BigInt!
+  mintTimestamp: BigInt!
+  mintBlockNumber: BigInt!
+  nfts: [NFT!]
+}
+
+type RoleGranted implements Event @entity {
+    id: ID!
+    emitter: Bytes!
+    transaction: String!
+    timestamp: BigInt!
+    contract: Bytes!
+    role: Role!
+    roleHolder: RoleHolder!
+    account: Bytes!
+    sender: Bytes!
+}
+
+type RoleRevoked implements Event @entity {
+    id: ID!
+    emitter: Bytes!
+    transaction: String!
+    timestamp: BigInt!
+    contract: Bytes!
+    role: Role!
+    roleHolder: RoleHolder!
+    account: Bytes!
+    sender: Bytes!
+}
+
+type RoleHolder @entity {
+    id: ID!
+    contract: Bytes!
+    role: Role!
+    account: Bytes!
+    hasRole: Boolean!
+    roleGrants: [RoleGranted!]
+    roleRevoked: [RoleRevoked!]
+}
+type Role @entity {
+    id: ID!
+    contract: Bytes!
+    roleHash: Bytes!
+    roleName: String! # match the hash to the roles in roles.sol
+    roleHolders: [RoleHolder!]
+}
+
+interface Event {
+    id: ID!
+    transaction: String!
+    emitter: Bytes!
+    timestamp: BigInt!
 }

@@ -458,3 +458,5 @@ export const fetchSubgraph = (subgraphName: string): ApolloFetch => {
 	  uri: `http://localhost:8000/subgraphs/name/${subgraphName}`,
 	});
   };
+
+export const DELEGATED_MINTER = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("DELEGATED_MINTER"))

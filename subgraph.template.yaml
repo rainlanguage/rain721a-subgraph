@@ -44,7 +44,9 @@ templates:
         - name: ERC20
           file: ./abis/ERC20.json
       eventHandlers:
-        - event: Construct((string,string,string,uint256,address,address,uint256))
+        - event: Buy(address,uint256,uint256)
+          handler: handleBuy
+        - event: Construct((string,string,string,uint256,address,address,address,uint256))
           handler: handleConstruct
         - event: Initialize((address,address,(bytes[],uint256[])))
           handler: handleInitialize
@@ -52,6 +54,14 @@ templates:
           handler: handleOwnershipTransferred
         - event: RecipientChanged(address)
           handler: handleRecipientChanged
+        - event: RoleAdminChanged(indexed bytes32,indexed bytes32,indexed bytes32)
+          handler: handleRoleAdminChanged
+        - event: RoleGranted(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleGranted
+        - event: RoleRevoked(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleRevoked
         - event: Transfer(indexed address,indexed address,indexed uint256)
           handler: handleTransfer
+        - event: Withdraw(address,uint256,uint256)
+          handler: handleWithdraw
       file: ./src/vapour721A.ts

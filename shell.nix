@@ -27,7 +27,7 @@ let
   '';
 
   init = pkgs.writeShellScriptBin "init" ''
-    mkdir -p contracts && cp -r node_modules/@beehiveinnovation/rain721a/contracts .
+    mkdir -p contracts && cp -r node_modules/@beehiveinnovation/vapour721a/contracts .
     npx hardhat compile
     cp -r artifacts/contracts/Vapour721A.sol/Vapour721A.json ./abis
     cp -r artifacts/contracts/Vapour721AFactory.sol/Vapour721AFactory.json ./abis
