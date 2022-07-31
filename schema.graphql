@@ -1,6 +1,7 @@
 type Vapour721AFactory @entity {
   id: ID!
   address: Bytes!
+  implementation: Bytes!
   children: [Vapour721A!]
   childrenCount: BigInt!
 }

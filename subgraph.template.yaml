@@ -22,6 +22,8 @@ dataSources:
         - name: Vapour721AFactory
           file: ./abis/Vapour721AFactory.json
       eventHandlers:
+        - event: Implementation(address,address)
+          handler: handleImplementation
         - event: NewChild(address,address)
           handler: handleNewChild
       file: ./src/Vapour721AFactory.ts

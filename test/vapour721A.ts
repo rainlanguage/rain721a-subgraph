@@ -83,6 +83,7 @@ describe("Vapour721A subgraph tests", () => {
                     id
                     }
                     childrenCount
+                    implementation
                 }
             }`,
       })) as FetchResult;
@@ -96,6 +97,7 @@ describe("Vapour721A subgraph tests", () => {
         id: vapour721A.address.toLowerCase(),
       });
       expect(factory.childrenCount).to.equals("1");
+      expect(factory.implementation).to.not.null;
     });
 
     it("Should create Vapour721A entity correctly", async () => {
