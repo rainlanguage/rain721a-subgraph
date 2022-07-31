@@ -3,7 +3,6 @@ import hre, { ethers } from "hardhat";
 import path from "path";
 import { Vapour721AStateBuilder } from "../typechain/Vapour721AStateBuilder";
 import {
-  ConstructorConfigStruct,
   InitializeConfigStruct,
   Vapour721A,
 } from "../typechain/Vapour721A";
@@ -17,7 +16,6 @@ import { exit } from "process";
 export let vapour721AFactory: Vapour721AFactory;
 export let vapour721AStateBuilder: Vapour721AStateBuilder;
 export let rain721a: Vapour721A;
-export let rain721aConstructorConfig: ConstructorConfigStruct;
 export let rain721aInitializeConfig: InitializeConfigStruct;
 export let rTKN: Token;
 export let gameAsset: ReserveTokenERC1155;

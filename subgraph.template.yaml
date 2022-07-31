@@ -46,9 +46,7 @@ templates:
       eventHandlers:
         - event: Buy(address,uint256,uint256)
           handler: handleBuy
-        - event: Construct((string,string,string,uint256,address,address,address,uint256))
-          handler: handleConstruct
-        - event: Initialize((address,address,(bytes[],uint256[])))
+        - event: Initialize((string,string,string,uint256,address,address,address,uint256,address,(bytes[],uint256[])),address)
           handler: handleInitialize
         - event: OwnershipTransferred(indexed address,indexed address)
           handler: handleOwnershipTransferred

@@ -2,7 +2,7 @@ import { FetchResult } from "apollo-fetch";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { StateConfig } from "rain-sdk";
-import { ConstructorConfigStruct, Vapour721A } from "../typechain/Vapour721A";
+import { InitializeConfigStruct, Vapour721A } from "../typechain/Vapour721A";
 import { NewChildEvent } from "../typechain/Vapour721AFactory";
 import {
   buyer0,
@@ -30,14 +30,19 @@ import {
 } from "./utils";
 
 let vapour721A: Vapour721A;
-let constructorConfig: ConstructorConfigStruct;
+let initializeConfig: InitializeConfigStruct;
 let vmStateConfig: StateConfig;
 describe("Vapour721A subgraph tests", () => {
   let response;
   let child, sender;
   describe("Should create Factory entity and child entity correctly.", () => {
     before(async () => {
-      constructorConfig = {
+      vmStateConfig = {
+        sources: [concat([op(Opcode.CONSTANT, 0), op(Opcode.CONSTANT, 1)])],
+        constants: [10000, 0],
+      };
+
+      initializeConfig = {
         name: "Rain721NFT",
         symbol: "RAIN",
         supplyLimit: 10000,
@@ -45,17 +50,15 @@ describe("Vapour721A subgraph tests", () => {
         recipient: recipient.address,
         owner: owner.address,
         royaltyBPS: 1000,
-        admin: buyer6.address
+        admin: buyer6.address,
+        currency: ZERO_ADDRESS,
+        vmStateConfig: vmStateConfig
       };
 
-      vmStateConfig = {
-        sources: [concat([op(Opcode.CONSTANT, 0), op(Opcode.CONSTANT, 1)])],
-        constants: [10000, 0],
-      };
 
       const deployTx = await vapour721AFactory
         .connect(buyer0)
-        .createChildTyped(constructorConfig, ZERO_ADDRESS, vmStateConfig);
+        .createChildTyped(initializeConfig);
 
       [sender, child] = (await getEventArgs(
         deployTx,
@@ -123,17 +126,17 @@ describe("Vapour721A subgraph tests", () => {
       const vapour721AData = response.data.vapour721A;
 
       expect(vapour721AData.id).to.equals(vapour721A.address.toLowerCase());
-      expect(vapour721AData.name).to.equals(constructorConfig.name);
-      expect(vapour721AData.symbol).to.equals(constructorConfig.symbol);
+      expect(vapour721AData.name).to.equals(initializeConfig.name);
+      expect(vapour721AData.symbol).to.equals(initializeConfig.symbol);
       expect(vapour721AData.supplyLimit).to.equals(
-        constructorConfig.supplyLimit.toString()
+        initializeConfig.supplyLimit.toString()
       );
-      expect(vapour721AData.baseURI).to.equals(constructorConfig.baseURI);
+      expect(vapour721AData.baseURI).to.equals(initializeConfig.baseURI);
       expect(vapour721AData.owner).to.equals(
-        constructorConfig.owner.toLowerCase()
+        initializeConfig.owner.toLowerCase()
       );
       expect(vapour721AData.recipient).to.equals(
-        constructorConfig.recipient.toLowerCase()
+        initializeConfig.recipient.toLowerCase()
       );
       expect(vapour721AData.deployer).to.equals(buyer0.address.toLowerCase());
       expect(vapour721AData.vmStateBuilder).to.equals(
@@ -352,7 +355,7 @@ describe("Vapour721A subgraph tests", () => {
 describe("ERC20 Token test", () => {
   let erc20vapour721A: Vapour721A;
   before(async () => {
-    let ERC20constructorConfig: ConstructorConfigStruct = {
+    let ERC20constructorConfig: InitializeConfigStruct = {
       name: "Rain721NFT",
       symbol: "RAIN",
       supplyLimit: 10000,
@@ -360,13 +363,15 @@ describe("ERC20 Token test", () => {
       recipient: recipient.address,
       owner: owner.address,
       royaltyBPS: 1000,
-      admin: buyer2.address
+      admin: buyer2.address,
+      currency: rTKN.address,
+      vmStateConfig: vmStateConfig
     };
 
     await rTKN.connect(buyer0).mintTokens(1000);
     const deployTx = await vapour721AFactory
       .connect(buyer0)
-      .createChildTyped(ERC20constructorConfig, rTKN.address, vmStateConfig);
+      .createChildTyped(ERC20constructorConfig);
 
     let [sender, child] = (await getEventArgs(
       deployTx,
