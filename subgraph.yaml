@@ -6,10 +6,10 @@ schema:
 dataSources:
   - kind: ethereum
     name: Vapour721AFactory
-    network: localhost
+    network: mainnet
     source:
-      address: "0xCD8a1C3ba11CF5ECfa6267617243239504a98d90"
-      startBlock: 102
+      address: "0x30F91A5Ed1f8a33b9F62adFB3234738184648D72"
+      startBlock: 15270000
       abi: Vapour721AFactory
     mapping:
       kind: ethereum/events
@@ -28,7 +28,7 @@ dataSources:
 templates:
   - kind: ethereum
     name: Vapour721ATemplate
-    network: localhost
+    network: mainnet
     source:
       abi: Vapour721A
     mapping:
