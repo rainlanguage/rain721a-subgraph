@@ -13,7 +13,6 @@ import {
   RoleRevoked,
 } from "../generated/schema";
 import {
-  Construct,
   Initialize,
   OwnershipTransferred,
   RecipientChanged,
@@ -33,19 +32,6 @@ import {
   ZERO_ADDRESS,
 } from "./utils";
 import { BigInt, Bytes, log } from "@graphprotocol/graph-ts";
-export function handleConstruct(event: Construct): void {
-  let vapour721A = Vapour721A.load(event.address.toHex());
-  if (vapour721A) {
-    vapour721A.name = event.params.config_.name;
-    vapour721A.symbol = event.params.config_.symbol;
-    vapour721A.baseURI = event.params.config_.baseURI;
-    vapour721A.owner = event.params.config_.owner;
-    vapour721A.recipient = event.params.config_.recipient;
-    vapour721A.supplyLimit = event.params.config_.supplyLimit;
-    vapour721A.royaltyBPS = event.params.config_.royaltyBPS;
-    vapour721A.save();
-  }
-}
 
 export function handleInitialize(event: Initialize): void {
   let vapour721A = Vapour721A.load(event.address.toHex());
@@ -57,7 +43,7 @@ export function handleInitialize(event: Initialize): void {
     vmStateConfig.save();
     vapour721A.vmStateConfig = vmStateConfig.id;
 
-    vapour721A.vmStateBuilder = event.params.config_.vmStateBuilder;
+    vapour721A.vmStateBuilder = event.params.vmStateBuilder_;
     if (event.params.config_.currency.toHex() == ZERO_ADDRESS) {
       let currency = Token.load(event.params.config_.currency.toHex());
       if (!currency) {
@@ -87,6 +73,13 @@ export function handleInitialize(event: Initialize): void {
 
       vapour721A.currency = currency.id;
     }
+    vapour721A.name = event.params.config_.name;
+    vapour721A.symbol = event.params.config_.symbol;
+    vapour721A.baseURI = event.params.config_.baseURI;
+    vapour721A.owner = event.params.config_.owner;
+    vapour721A.recipient = event.params.config_.recipient;
+    vapour721A.supplyLimit = event.params.config_.supplyLimit;
+    vapour721A.royaltyBPS = event.params.config_.royaltyBPS;
     vapour721A.save();
   }
 }

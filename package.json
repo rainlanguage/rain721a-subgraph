@@ -17,12 +17,14 @@
     "build": "graph build",
     "generate-schema": "cat schema/* > schema.graphql",
     "deploy": "yarn prepare:mumbai && graph deploy --node https://api.thegraph.com/deploy/ vishalkale151071/rain-protocol",
+    "deploy2": "yarn prepare:mumbai2 && graph deploy --node https://api.thegraph.com/deploy/ vishalkale151071/blocks",
     "create-local": "graph create --node http://localhost:8020/ beehive-innovation/rain-protocol",
     "remove-local": "graph remove --node http://localhost:8020/ beehive-innovation/rain-protocol",
     "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 beehive-innovation/rain-protocol  --version-label 1",
     "deploy-mainnet": "graph deploy --node https://api.thegraph.com/deploy/ beehive-innovation/vapour721a-alpha",
     "prepare:mainnet": "npx mustache config/mainnet.json subgraph.template.yaml subgraph.yaml",
     "prepare:mumbai": "npx mustache config/mumbai.json subgraph.template.yaml subgraph.yaml",
+    "prepare:mumbai2": "npx mustache config/mumbai2.json subgraph.template.yaml subgraph.yaml",
     "prepare:localhost": "npx mustache config/test/localhost.json subgraph.template.yaml subgraph.yaml",
     "deploy:localhost": "npm run prepare:localhost && npm run create-local && npm run deploy-local",
     "deploy-build:localhost": "npm run prepare:localhost && npm run generate-schema && npm run codegen && npm run build && npm run create-local && npm run deploy-local",
@@ -46,9 +48,7 @@
   },
   "devDependencies": {
     "@beehiveinnovation/rain-protocol": "git+https://github.com/beehive-innovation/rain-protocol.git#b4af313dbe0dd2b2c4f630e7f7fe37a9ac6e073f",
-    "@beehiveinnovation/vapour721a": "git+https://github.com/beehive-innovation/vapour721a.git#19970a8ae1553ba0319002cac894472450048882",
-    "rain-sdk": "2.0.0",
-    "erc721a": "^3.3.0",
+    "@beehiveinnovation/vapour721a": "git+https://github.com/beehive-innovation/vapour721a.git#236e41b3239d75d7db01ffa7f5d48a05981e8c61",
     "@nomiclabs/hardhat-ethers": "^2.0.3",
     "@nomiclabs/hardhat-etherscan": "^3.0.3",
     "@openzeppelin/test-helpers": "^0.5.15",
@@ -58,7 +58,9 @@
     "@types/node": "^14.14.22",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
+    "apollo-fetch": "^0.7.0",
     "chai": "^4.3.6",
+    "erc721a-upgradeable": "^4.2.2",
     "eslint": "^8.2.0",
     "ethers": "^5.5.2",
     "hardhat": "^2.9.2",
@@ -67,6 +69,7 @@
     "hardhat-storage-layout": "^0.1.6",
     "prettier": "^2.3.2",
     "pretty-quick": "^3.1.1",
+    "rain-sdk": "2.0.0",
     "solc-0.8": "npm:solc@^0.8.10",
     "solhint": "^3.3.4",
     "solidity-docgen": "^0.5.13",
@@ -74,7 +77,6 @@
     "ts-node": "10.8.1",
     "tslib": "^2.0.0",
     "typechain": "^6.0.2",
-    "typescript": "^4.7.3",
-    "apollo-fetch": "^0.7.0"
+    "typescript": "^4.7.3"
   }
 }
