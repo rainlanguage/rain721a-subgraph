@@ -6,10 +6,10 @@ schema:
 dataSources:
   - kind: ethereum
     name: Vapour721AFactory
-    network: mumbai
+    network: mainnet
     source:
-      address: "0xE60Feb0C119692A03a6f92E9d47F97e054B92600"
-      startBlock: 27657804
+      address: "0x465809D4A61192C4324EC86Fa7185CeE05515BFb"
+      startBlock: 15576527
       abi: Vapour721AFactory
     mapping:
       kind: ethereum/events
@@ -24,11 +24,13 @@ dataSources:
       eventHandlers:
         - event: NewChild(address,address)
           handler: handleNewChild
+        - event: Implementation(address)
+          handler: handleImplementation
       file: ./src/Vapour721AFactory.ts
 templates:
   - kind: ethereum
     name: Vapour721ATemplate
-    network: mumbai
+    network: mainnet
     source:
       abi: Vapour721A
     mapping:
@@ -46,7 +48,7 @@ templates:
       eventHandlers:
         - event: Buy(address,uint256,uint256)
           handler: handleBuy
-        - event: Initialize((string,string,string,uint256,address,address,address,uint256,address,(bytes[],uint256[])),address)
+        - event: Initialize((string,string,string,uint256,address,address,address,uint256,address,(bytes[],uint256[],uint256,uint256)))
           handler: handleInitialize
         - event: OwnershipTransferred(indexed address,indexed address)
           handler: handleOwnershipTransferred

@@ -24,6 +24,8 @@ dataSources:
       eventHandlers:
         - event: NewChild(address,address)
           handler: handleNewChild
+        - event: Implementation(address,address)
+          handler: handleImplementation
       file: ./src/Vapour721AFactory.ts
 templates:
   - kind: ethereum
@@ -46,7 +48,7 @@ templates:
       eventHandlers:
         - event: Buy(address,uint256,uint256)
           handler: handleBuy
-        - event: Initialize((string,string,string,uint256,address,address,address,uint256,address,(bytes[],uint256[])),address)
+        - event: Initialize((string,string,string,uint256,address,address,address,uint256,address,(bytes[],uint256[],uint256,uint256)))
           handler: handleInitialize
         - event: OwnershipTransferred(indexed address,indexed address)
           handler: handleOwnershipTransferred

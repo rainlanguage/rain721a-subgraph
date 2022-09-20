@@ -39,11 +39,12 @@ export function handleInitialize(event: Initialize): void {
     let vmStateConfig = new StateConfig(event.address.toHex());
     vmStateConfig.sources = event.params.config_.vmStateConfig.sources;
     vmStateConfig.constants = event.params.config_.vmStateConfig.constants;
+    vmStateConfig.argumentsLength = event.params.config_.vmStateConfig.argumentsLength;
+    vmStateConfig.stackLength = event.params.config_.vmStateConfig.stackLength;
 
     vmStateConfig.save();
     vapour721A.vmStateConfig = vmStateConfig.id;
 
-    vapour721A.vmStateBuilder = event.params.vmStateBuilder_;
     if (event.params.config_.currency.toHex() == ZERO_ADDRESS) {
       let currency = Token.load(event.params.config_.currency.toHex());
       if (!currency) {

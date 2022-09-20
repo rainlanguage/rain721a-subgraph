@@ -1,9 +1,7 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import hre, { ethers } from "hardhat";
 import path from "path";
-import { Vapour721AStateBuilder } from "../typechain/Vapour721AStateBuilder";
 import {
-  ConstructorConfigStruct,
   InitializeConfigStruct,
   Vapour721A,
 } from "../typechain/Vapour721A";
@@ -15,9 +13,7 @@ import { delay, exec, fetchFile, fetchSubgraph, writeFile } from "./utils";
 import { exit } from "process";
 
 export let vapour721AFactory: Vapour721AFactory;
-export let vapour721AStateBuilder: Vapour721AStateBuilder;
 export let rain721a: Vapour721A;
-export let rain721aConstructorConfig: ConstructorConfigStruct;
 export let rain721aInitializeConfig: InitializeConfigStruct;
 export let rTKN: Token;
 export let gameAsset: ReserveTokenERC1155;
@@ -54,12 +50,9 @@ before(async () => {
   const Vapour721AStateBuilder = await ethers.getContractFactory(
     "Vapour721AStateBuilder"
   );
-  vapour721AStateBuilder =
-    (await Vapour721AStateBuilder.deploy()) as Vapour721AStateBuilder;
-  await vapour721AStateBuilder.deployed();
 
   const Vapour721AFactory = await ethers.getContractFactory("Vapour721AFactory");
-  vapour721AFactory = (await Vapour721AFactory.deploy(vapour721AStateBuilder.address)) as Vapour721AFactory;
+  vapour721AFactory = (await Vapour721AFactory.deploy()) as Vapour721AFactory;
   await vapour721AFactory.deployed();
 
 
@@ -83,7 +76,6 @@ before(async () => {
 
   config.vapour721AFactory = vapour721AFactory.address;
   config.vapour721AFactoryBlock = vapour721AFactory.deployTransaction.blockNumber;
-  config.vapour721AStateBuilder = vapour721AStateBuilder.address;
 
   const pathConfigLocal = path.resolve(
     __dirname,
