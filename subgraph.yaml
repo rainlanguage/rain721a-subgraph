@@ -8,8 +8,8 @@ dataSources:
     name: Vapour721AFactory
     network: mainnet
     source:
-      address: "0x465809D4A61192C4324EC86Fa7185CeE05515BFb"
-      startBlock: 15576527
+      address: "0x0a1DC67fF497CB3cAB218aa87e3a2263360181CE"
+      startBlock: 15626213
       abi: Vapour721AFactory
     mapping:
       kind: ethereum/events
@@ -24,7 +24,7 @@ dataSources:
       eventHandlers:
         - event: NewChild(address,address)
           handler: handleNewChild
-        - event: Implementation(address)
+        - event: Implementation(address,address)
           handler: handleImplementation
       file: ./src/Vapour721AFactory.ts
 templates:

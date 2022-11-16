@@ -25,7 +25,7 @@ type Vapour721A @entity {
   amountWithdrawn: BigInt!
   withdrawals: [Withdraw!]
   mintTransactionCount: BigInt!
-  mintTransactions: [MintTransaction!]
+  mintTransactions: [MintTransaction!] @derivedFrom(field: "contract")
 }
 
 type StateConfig @entity {
@@ -67,6 +67,7 @@ type Withdraw @entity {
 
 type MintTransaction @entity {
   id: ID!
+  contract: Vapour721A! 
   hash: String!
   receiver: Bytes!
   units: BigInt!

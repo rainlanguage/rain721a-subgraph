@@ -75,13 +75,17 @@ const config: HardhatUserConfig = {
     mumbai: {
       url: `https://polygon-mumbai.infura.io/v3/${process.env.API_KEY}`,
       accounts: [`0x${process.env.PRIVATE_KEY}`]
+    },
+    mainnet: {
+      url: `https://mainnet.infura.io/v3/${process.env.API_KEY}`,
+      accounts: [`0x${process.env.PRIVATE_KEY}`]
     }
   },
   mocha: {
     timeout: 600000,
   },
   etherscan: {
-    apiKey: process.env.POLYGONSCAN_API_KEY
+    apiKey: process.env.ETHERSCAN_API_KEY
   }
 };
 

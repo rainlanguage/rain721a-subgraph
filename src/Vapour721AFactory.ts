@@ -13,7 +13,6 @@ export function handleNewChild(event: NewChild): void {
     vapour721A.deployTimestamp = event.block.number;
     vapour721A.nfts = [];
     vapour721A.withdrawals = [];
-    vapour721A.mintTransactions = [];
     vapour721A.amountPayable = ZERO;
     vapour721A.amountWithdrawn = ZERO;
     vapour721A.mintTransactionCount = ZERO;

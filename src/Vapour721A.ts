@@ -195,6 +195,7 @@ export function handleBuy(event: Buy): void {
     let transaction = new MintTransaction(
       vapour721A.mintTransactionCount.toString()
     );
+    transaction.contract = event.address.toHex();
     transaction.mintBlockNumber = event.block.number;
     transaction.mintTimestamp = event.block.timestamp;
     transaction.hash = event.transaction.hash.toHex();
@@ -213,10 +214,6 @@ export function handleBuy(event: Buy): void {
     }
     transaction.nfts = T_nfts;
     transaction.save();
-
-    let mintTransactions = vapour721A.mintTransactions;
-    if (mintTransactions) mintTransactions.push(transaction.id);
-    vapour721A.mintTransactions = mintTransactions;
 
     vapour721A.mintTransactionCount = vapour721A.mintTransactionCount.plus(ONE);
     vapour721A.save();

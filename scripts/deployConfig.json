@@ -1,0 +1,7 @@
+{
+  "configPath": "config/mumbai.json",
+  "subgraphName": "vishalkale151071/drop-sale-ticket",
+  "versionLabel": "default",
+  "endpoint": "default",
+  "ipfsEndpoint": "default"
+}
